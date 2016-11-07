@@ -8,11 +8,17 @@ class DemoController < ApplicationController
   private
 
   def get_activated_html_from_redis
-    $redis.get("paperless-demo:index:current-content")
+    version_key = version_from_params || 'current-content'
+    $redis.get("paperless-demo:index:#{version_key}")
   end
 
   def get_active_version
-    $redis.get("paperless-demo:index:current")
+    version_from_params or $redis.get("paperless-demo:index:current")
+  end
+
+  def version_from_params
+    version = params[:version]
+    version if version.present? && version.length == 32
   end
 
   def demo_data
@@ -26,7 +32,7 @@ class DemoController < ApplicationController
   end
 
   def inject_meta_tag(html)
-    html.insert(inside_head_tag_position(html), <<-HTML.strip)    
+    html.insert(inside_head_tag_position(html), <<-HTML.strip)
       <meta name="demo-data" content="#{escaped_demo_data_json}">
     HTML
   end
